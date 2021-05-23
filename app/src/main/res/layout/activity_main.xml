@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center"
+    android:background="@drawable/main_bg.png"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/heading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="400dp"
+        android:text="Бесеница"
+        android:textSize="40dp" />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:background="@color/black"/>
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:layout_marginTop="100dp"
+        android:background="@color/white">
+
+        <ImageButton
+            android:id="@+id/en"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_row="1"
+            android:layout_column="1"
+            android:background="@color/white"
+            android:scaleType="centerCrop"
+            android:src="@drawable/bg" />
+        <TextView
+            android:text="Language"
+            android:layout_column="2"
+            android:layout_row="1"
+            android:layout_gravity="top"
+            />
+
+        <Switch
+            android:id="@+id/language"
+            android:layout_column="2"
+            android:layout_row="1"
+            android:layout_gravity="bottom"
+            android:layout_marginLeft="16px"
+            android:textOff="BG"
+            android:textOn="EN"
+
+            />
+
+        <ImageButton
+            android:id="@+id/bg"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_row="1"
+            android:layout_column="3"
+            android:background="@color/white"
+            android:scaleType="centerCrop"
+            android:src="@drawable/en" />
+
+    </GridLayout>
+
+</LinearLayout>
