@@ -1,7 +1,5 @@
 package com.example.hangman;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -22,17 +20,18 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Random;
+
+import static java.lang.Integer.parseInt;
 
 public class Game extends AppCompatActivity {
     private String language;
     private String word;
     private List<Integer> showPositions;
     private TextView wordView;
+    private  int maxTries = 0;
+    private  int failTries = 7;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +40,15 @@ public class Game extends AppCompatActivity {
         showPositions = new ArrayList<Integer>();
         Intent intent = getIntent();
         language = intent.getExtras().getString("language");
+        if (language == "en"){
         getWordEn();
+        }
+        else if (language == "bg"){
+
+        }
+        else{
+            Toast.makeText(this, "Language error", Toast.LENGTH_SHORT).show();
+        }
     }
     public void getWordEn(){
 
@@ -90,6 +97,7 @@ public class Game extends AppCompatActivity {
         }
         wordView.setText(hiddenWord);
         showPositions.add(random-1);
+//        countTries();
     }
     public void checkChar(View view){
         EditText guessField = (EditText)findViewById(R.id.guess);
@@ -97,10 +105,28 @@ public class Game extends AppCompatActivity {
             if (word.charAt(i)==guessField.getText().toString().charAt(0)){
                 showPositions.add(i);
             }
+            else{
+                guessField.clearComposingText();
+                failTries--;
+            }
         }
         updateHiddenWord();
+        if(showPositions.size()==word.length()){
+            win();
+        }
+        else if (failTries<=0){
+            lose();
+        }
 
     }
+//    public void countTries(){
+//        List<Character> diffChars = new ArrayList<Character>();
+//        for (int i = 0;i<word.length();i++){
+//            if (!diffChars.contains(word.charAt(i)))
+//            diffChars.add(word.charAt(i));
+//            maxTries++;
+//        }
+//    }
     public void updateHiddenWord(){
         String hiddenWord = "";
         for (int i=0;i<word.length();i++){
@@ -112,5 +138,11 @@ public class Game extends AppCompatActivity {
             }
         }
         wordView.setText(hiddenWord);
+    }
+    public void win(){
+
+    }
+    public void lose(){
+
     }
 }
