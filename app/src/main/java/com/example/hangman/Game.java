@@ -15,6 +15,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,14 +42,11 @@ public class Game extends AppCompatActivity {
         showPositions = new ArrayList<Integer>();
         Intent intent = getIntent();
         language = intent.getExtras().getString("language");
-        if (language == "en"){
+        if (language.equals("en")){
         getWordEn();
         }
-        else if (language == "bg"){
+        else if (language.equals("bg")){
 
-        }
-        else{
-            Toast.makeText(this, "Language error", Toast.LENGTH_SHORT).show();
         }
     }
     public void getWordEn(){
@@ -86,7 +85,7 @@ public class Game extends AppCompatActivity {
     public void hideWord(String processedWord){
         String hiddenWord = "";
         Random r = new Random();
-        int random = r.nextInt(processedWord.length());
+        int random = r.nextInt(processedWord.length())+1;
         for (int i=0;i<processedWord.length();i++){
             if (i==random-1){
                 hiddenWord+=processedWord.charAt(i)+" ";
@@ -95,20 +94,29 @@ public class Game extends AppCompatActivity {
                 hiddenWord+="_ ";
             }
         }
+        //CHECK IF INIT CHAR EXISTS
+        for (int i=0;i<word.length();i++){
+            if (word.charAt(i)==word.charAt(random-1)){
+                showPositions.add(i);
+            }
+        }
         wordView.setText(hiddenWord);
         showPositions.add(random-1);
 //        countTries();
     }
     public void checkChar(View view){
         EditText guessField = (EditText)findViewById(R.id.guess);
+        int showPosUpdate = showPositions.size();
         for (int i=0;i<word.length();i++){
             if (word.charAt(i)==guessField.getText().toString().charAt(0)){
                 showPositions.add(i);
             }
             else{
                 guessField.clearComposingText();
-                failTries--;
             }
+        }
+        if (showPosUpdate<showPositions.size()){
+            failTries--;
         }
         updateHiddenWord();
         if(showPositions.size()==word.length()){
@@ -140,9 +148,13 @@ public class Game extends AppCompatActivity {
         wordView.setText(hiddenWord);
     }
     public void win(){
-
+        Toast.makeText(this, "You Win", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this,MainActivity.class);
+        startActivity(intent);
     }
     public void lose(){
-
+        Toast.makeText(this, "You Lose", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this,MainActivity.class);
+        startActivity(intent);
     }
 }
