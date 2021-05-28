@@ -1,5 +1,6 @@
 package com.example.hangman;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -15,8 +16,11 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,26 +32,35 @@ import java.util.Random;
 import static java.lang.Integer.parseInt;
 
 public class Game extends AppCompatActivity {
-    private String language;
     private String word;
+    private String username;
     private List<Integer> showPositions;
     private TextView wordView;
-    private  int maxTries = 0;
     private  int failTries = 7;
+    private int currentWins = 0;
+    private int currentLoses = 0;
+    private String userId;
+    private User user;
+    private Intent intent;
+    private DatabaseReference reference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        intent = getIntent();
+        reference = FirebaseDatabase.getInstance("https://androidproject-f7ca1-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
+        userId =intent.getExtras().getString("userId");
         wordView = (TextView) findViewById(R.id.guessWord);
         showPositions = new ArrayList<Integer>();
-        Intent intent = getIntent();
-        language = intent.getExtras().getString("language");
+        String language = intent.getExtras().getString("language");
         if (language.equals("en")){
         getWordEn();
         }
         else if (language.equals("bg")){
 
         }
+        username = intent.getExtras().getString("user");
+        getCurrentStats();
     }
     public void getWordEn(){
 
@@ -74,7 +87,7 @@ public class Game extends AppCompatActivity {
     public void processResponse(JSONArray jsonArray){
         try {
             JSONObject jsonObject = jsonArray.getJSONObject(0);
-            String processedWord = jsonObject.optString("word");
+            String processedWord = jsonObject.optString("word").toLowerCase();
             word = processedWord;
             hideWord(processedWord);
         }
@@ -95,11 +108,11 @@ public class Game extends AppCompatActivity {
             }
         }
         //CHECK IF INIT CHAR EXISTS
-        for (int i=0;i<word.length();i++){
-            if (word.charAt(i)==word.charAt(random-1)){
-                showPositions.add(i);
-            }
-        }
+//        for (int i=0;i<word.length();i++){
+//            if (word.charAt(i)==word.charAt(random-1)){
+//                showPositions.add(i);
+//            }
+//        }
         wordView.setText(hiddenWord);
         showPositions.add(random-1);
 //        countTries();
@@ -109,20 +122,22 @@ public class Game extends AppCompatActivity {
         int showPosUpdate = showPositions.size();
         for (int i=0;i<word.length();i++){
             if (word.charAt(i)==guessField.getText().toString().charAt(0)){
-                showPositions.add(i);
+                if (!showPositions.contains(i)) {
+                    showPositions.add(i);
+                }
             }
             else{
                 guessField.clearComposingText();
             }
         }
-        if (showPosUpdate<showPositions.size()){
+        if (showPosUpdate == showPositions.size()){
             failTries--;
         }
         updateHiddenWord();
         if(showPositions.size()==word.length()){
             win();
         }
-        else if (failTries<=0){
+        if (failTries<=0){
             lose();
         }
 
@@ -148,13 +163,37 @@ public class Game extends AppCompatActivity {
         wordView.setText(hiddenWord);
     }
     public void win(){
-        Toast.makeText(this, "You Win", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(this,MainActivity.class);
+        currentWins++;
+        pushToDb();
+        Toast.makeText(Game.this, "You Win", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(Game.this,MainActivity.class);
         startActivity(intent);
+
     }
     public void lose(){
+        currentLoses++;
+        pushToDb();
         Toast.makeText(this, "You Lose", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this,MainActivity.class);
         startActivity(intent);
+    }
+    public void pushToDb(){
+        user = new User(username,currentWins,currentLoses);
+        reference.child(userId).setValue(user);
+    }
+    public void getCurrentStats(){
+        reference.child(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                currentWins = parseInt(snapshot.child("wins").getValue().toString());
+                currentLoses = parseInt(snapshot.child("loses").getValue().toString());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
     }
 }

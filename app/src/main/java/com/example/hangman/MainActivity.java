@@ -23,23 +23,23 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
-    private String accountContext = "none";
     private String language = "bg";
     private FirebaseAuth mAuth;
     SignInButton signInButton;
     private static final int RC_SIGN_IN = 123;
     private static final String TAG = "GoogleSignIn";
     GoogleSignInClient signInClient;
+    Intent intent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        intent = new Intent(this, Game.class);
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
         signInClient = GoogleSignIn.getClient(this, gso);
-
         signInButton = findViewById(R.id.sign_in_button);
         signInButton.setOnClickListener(new View.OnClickListener()
         {
@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        intent.putExtra("userId",account.getId());
+        intent.putExtra("user",account.getDisplayName());
         if(account != null){
             signInButton.setVisibility(View.INVISIBLE);
         }
@@ -72,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     public void startGame(View view){
-        Intent intent = new Intent(this, Game.class);
         intent.putExtra("language", language);
         if (language.equals("en")) {
             startActivity(intent);
