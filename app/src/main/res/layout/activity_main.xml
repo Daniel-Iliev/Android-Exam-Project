@@ -54,7 +54,7 @@
             android:layout_gravity="center"
             android:textAlignment="center"
             android:layout_marginTop="20dp"
-            android:text="Бесеница"
+            android:text="Hangman"
             android:textSize="40dp"
             android:textColor="@color/black"/>
 
@@ -67,7 +67,7 @@
         <androidx.appcompat.widget.AppCompatButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Старт"
+            android:text="Start"
             android:layout_gravity="center"
             android:id="@+id/start"
             android:onClick="startGame"
@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:onClick="easyDiff"
-                android:text="Лесно"
+                android:text="Easy"
                 android:textSize="20dp"
                 android:textColor="@color/DarkCyan"
                 android:layout_gravity="bottom"
@@ -122,7 +122,7 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:onClick="hardDiff"
-                android:text="Трудно"
+                android:text="Hard"
                 android:textSize="20dp"
                 android:layout_marginStart="20dp"
                 android:layout_gravity="bottom"
