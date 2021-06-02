@@ -1,6 +1,6 @@
 package com.example.hangman;
 
-public class User {
+public class User{
     private String name;
     private int wins;
     private int loses;

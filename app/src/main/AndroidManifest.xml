@@ -11,8 +11,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Hangman">
-        <activity android:name=".Game" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".Ranking"
+            android:configChanges="screenSize" />
+        <activity android:name=".Game"
+            android:configChanges="screenSize"/>
+        <activity android:name=".MainActivity"
+            android:configChanges="screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

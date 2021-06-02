@@ -1,14 +1,16 @@
 package com.example.hangman;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.appcompat.widget.AppCompatButton;
-import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
+
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,36 +21,58 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import static java.lang.Integer.parseInt;
 
 public class MainActivity extends AppCompatActivity {
-    private String language = "bg";
-    private FirebaseAuth mAuth;
-    SignInButton signInButton;
+    private String difficulty = "easy";
+    private AppCompatButton signOutButton;
+    private SignInButton signInButton;
     private static final int RC_SIGN_IN = 123;
-    private static final String TAG = "GoogleSignIn";
-    GoogleSignInClient signInClient;
-    Intent intent;
+    private GoogleSignInClient signInClient;
+    private Intent intent;
+    private TextView nameField;
+    private AppCompatButton startBtn;
+    private Intent signInIntent;
+    private String userShowName;
+    private DatabaseReference reference;
+    private String userId;
+    private User user;
+    private AppCompatButton easyBtn;
+    private AppCompatButton hardBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().hide();
+        reference = FirebaseDatabase.getInstance("https://androidproject-f7ca1-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
         intent = new Intent(this, Game.class);
+        user = new User();
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
         signInClient = GoogleSignIn.getClient(this, gso);
+        signInIntent = signInClient.getSignInIntent();
         signInButton = findViewById(R.id.sign_in_button);
+        signOutButton = findViewById(R.id.singOut);
         signInButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
             {
-                signIn();
+                signIn(view);
             }
         });
+        nameField = findViewById(R.id.name);
+        startBtn = findViewById(R.id.start);
+        easyBtn = findViewById(R.id.easy);
+        hardBtn = findViewById(R.id.hard);
 
     }
     @Override
@@ -56,14 +80,30 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        intent.putExtra("userId",account.getId());
-        intent.putExtra("user",account.getDisplayName());
         if(account != null){
+            userShowName = account.getDisplayName();
+            if (userShowName.isEmpty()){
+                userShowName = account.getGivenName();
+                if (userShowName.isEmpty()){
+                    userShowName = account.getEmail();
+                }
+            }
+            userId = account.getId();
+            nameField.setText(userShowName);
+            nameField.setVisibility(View.VISIBLE);
             signInButton.setVisibility(View.INVISIBLE);
+            signOutButton.setVisibility(View.VISIBLE);
+            intent.putExtra("userId",userId);
+            intent.putExtra("user",userShowName);
+            getCurrentStats();
         }
         else {
-            AppCompatButton start = findViewById(R.id.start);
-            start.setOnClickListener(new View.OnClickListener()
+            userShowName = "";
+            nameField.setText(userShowName);
+            nameField.setVisibility(View.VISIBLE);
+            signOutButton.setVisibility(View.INVISIBLE);
+            signInButton.setVisibility(View.VISIBLE);
+            startBtn.setOnClickListener(new View.OnClickListener()
             {
                 @Override
                 public void onClick(View view)
@@ -74,30 +114,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     public void startGame(View view){
-        intent.putExtra("language", language);
-        if (language.equals("en")) {
-            startActivity(intent);
-        }
-        else {
-            Toast.makeText(this, "Not yet implemented", Toast.LENGTH_SHORT).show();
-        }
+        intent.putExtra("difficulty", difficulty);
+        startActivity(intent);
     }
-    public void setLangBg(View view){
-        language = "bg";
-        TextView heading = (TextView)findViewById(R.id.heading);
-        heading.setText("Бесеница");
-        Button start = findViewById(R.id.start);
-        start.setText("СТАРТ");
+    public void easyDiff(View view){
+        difficulty = "easy";
+        easyBtn.setTextColor(ContextCompat.getColor(this,R.color.DarkCyan));
+        hardBtn.setTextColor(ContextCompat.getColor(this,R.color.black));
     }
-    public void setLangEn(View view){
-        language = "en";
-        TextView heading = (TextView)findViewById(R.id.heading);
-        heading.setText("Hangman");
-        Button start = findViewById(R.id.start);
-        start.setText("START");
+    public void hardDiff(View view){
+        difficulty = "hard";
+        hardBtn.setTextColor(ContextCompat.getColor(this,R.color.DarkCyan));
+        easyBtn.setTextColor(ContextCompat.getColor(this,R.color.black));
     }
-    public void signIn() {
-        Intent signInIntent = signInClient.getSignInIntent();
+    public void signIn(View view) {
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
     @Override
@@ -113,10 +143,67 @@ public class MainActivity extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-            TextView name = findViewById(R.id.name);
-            name.setText(account.getDisplayName());
+            userShowName = account.getDisplayName();
+            if (userShowName.isEmpty()){
+                userShowName = account.getGivenName();
+                if (userShowName.isEmpty()){
+                    userShowName = account.getEmail();
+                }
+            }
+            userId = account.getId();
+            nameField.setText(userShowName);
+            nameField.setVisibility(View.VISIBLE);
+            signOutButton.setVisibility(View.VISIBLE);
+            signInButton.setVisibility(View.INVISIBLE);
+            startBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startGame(v);
+                }
+            });
+            intent.putExtra("userId",userId);
+            intent.putExtra("user",userShowName);
+            getCurrentStats();
         } catch (ApiException e) {
             Toast.makeText(this, e.getStatusCode(), Toast.LENGTH_SHORT).show();
         }
     }
+    public void signOut(View view){
+        signInClient.signOut();
+        nameField.setText("");
+        nameField.setVisibility(View.INVISIBLE);
+        signInButton.setVisibility(View.VISIBLE);
+        signOutButton.setVisibility(View.INVISIBLE);
+        startBtn.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                Toast.makeText(MainActivity.this, "User not logged in. Please log in first.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    public void showRanking(View view){
+        Intent intent = new Intent(this,Ranking.class);
+        startActivity(intent);
+    }
+    public void getCurrentStats(){
+        reference.child(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!snapshot.child("name").exists()) {
+                    user = new User(userShowName,0,0);
+                    reference.child(userId).setValue(user);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
 }
+
