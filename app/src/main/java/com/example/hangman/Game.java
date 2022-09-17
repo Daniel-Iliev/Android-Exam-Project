@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -69,6 +70,7 @@ public class Game extends AppCompatActivity {
     private TextView wordMsg;
     private Button check;
     private TextView triesText;
+    private String url;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,7 +78,7 @@ public class Game extends AppCompatActivity {
         getSupportActionBar().hide();
         guessField = findViewById(R.id.guess);
         intent = getIntent();
-        reference = FirebaseDatabase.getInstance("https://androidproject-f7ca1-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
+        reference = FirebaseDatabase.getInstance("https://hangman-1663345481301-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
         userId =intent.getExtras().getString("userId");
         wordView = findViewById(R.id.guessWord);
         showPositions = new ArrayList<Integer>();
@@ -115,7 +117,6 @@ public class Game extends AppCompatActivity {
     public void getWord(final AwaitCallBack callBack){
 
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="https://api.wordnik.com/v4/words.json/randomWords?hasDictionaryDef=true&minCorpusCount=0&minLength=1&maxLength=1&limit=1&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5";
 
 
         JsonArrayRequest jsonRequest = new JsonArrayRequest(Request.Method.GET, url,null,
@@ -137,8 +138,7 @@ public class Game extends AppCompatActivity {
     }
     public void processResponse(JSONArray jsonArray){
         try {
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            word = jsonObject.optString("word").toLowerCase();
+            word = jsonArray.getString(0);
         }
         catch (Exception e){
             return;
@@ -147,6 +147,8 @@ public class Game extends AppCompatActivity {
     public void hideWord(){
         Random r = new Random();
         int random = r.nextInt(word.length());
+        usedChars.add(word.charAt(random));
+        updateUsedChars();
         for (int i=0;i<word.length();i++){
             if (word.charAt(i)==word.charAt(random)){
                 showPositions.add(i);
@@ -220,6 +222,8 @@ public class Game extends AppCompatActivity {
 
         popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0);
         hideKeyboard(this);
+        wordMsg  = popupView.findViewById(R.id.word);
+        wordMsg.setText(word);
         usedChars = new ArrayList<>();
         updateUsedChars();
         check.setVisibility(View.INVISIBLE);
@@ -245,7 +249,7 @@ public class Game extends AppCompatActivity {
         final PopupWindow popupWindow = new PopupWindow(popupView, width, height, focusable);
         popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0);
         hideKeyboard(this);
-        wordMsg  = popupView.findViewById(R.id.loseWord);
+        wordMsg  = popupView.findViewById(R.id.word);
         wordMsg.setText(word);
         usedChars = new ArrayList<>();
         updateUsedChars();
@@ -297,31 +301,28 @@ public class Game extends AppCompatActivity {
         });
 
     }
+    public String getRandomNumber(int min, int max) {
+        Random random = new Random();
+        return String.valueOf(random.nextInt(max - min) + min);
+    }
     public void getWordEasy(){
+        url ="https://random-word-api.herokuapp.com/word?length="+getRandomNumber(3,7);
         getWord(new AwaitCallBack() {
             @Override
             public void onSuccess() {
-                if (word.length()>8){
-                    getWordEasy();
-                }
-                else {
                     showPositions.clear();
                     hideWord();
-                }
             }
         });
     }
+
     public void getWordHard(){
+        url ="https://random-word-api.herokuapp.com/word?length="+getRandomNumber(7,15);
         getWord(new AwaitCallBack() {
             @Override
             public void onSuccess() {
-                if (word.length()<6){
-                    getWordHard();
-                }
-                else {
                     showPositions.clear();
                     hideWord();
-                }
             }
         });
     }

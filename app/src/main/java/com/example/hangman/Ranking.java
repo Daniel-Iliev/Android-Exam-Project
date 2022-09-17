@@ -31,7 +31,7 @@ public class Ranking extends AppCompatActivity {
         getSupportActionBar().hide();
         user = new User();
         listView = findViewById(R.id.rankingList);
-        reference = FirebaseDatabase.getInstance("https://androidproject-f7ca1-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
+        reference = FirebaseDatabase.getInstance("https://hangman-1663345481301-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
         list = new ArrayList<>();
         adapter = new ArrayAdapter<String>(this,R.layout.user_info,R.id.userInfo,list);
         reference.addValueEventListener(new ValueEventListener() {

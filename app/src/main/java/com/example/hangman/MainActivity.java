@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
-        reference = FirebaseDatabase.getInstance("https://androidproject-f7ca1-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
+        reference = FirebaseDatabase.getInstance("https://hangman-1663345481301-default-rtdb.europe-west1.firebasedatabase.app/").getReference("users");
         intent = new Intent(this, Game.class);
         user = new User();
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -82,9 +82,9 @@ public class MainActivity extends AppCompatActivity {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if(account != null){
             userShowName = account.getDisplayName();
-            if (userShowName.isEmpty()){
+            if (userShowName == null){
                 userShowName = account.getGivenName();
-                if (userShowName.isEmpty()){
+                if (userShowName == null ){
                     userShowName = account.getEmail();
                 }
             }
